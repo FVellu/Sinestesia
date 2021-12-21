@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Document</title>
+    </head>
+    <body>
+        <script src="https://unpkg.com/@tonejs/midi"></script>
+        <script src="https://unpkg.com/tone"></script>
+        <input type="file" id="upload"/>
+        <p id="note">Note</p>
+        <script type="module">
+            var stopPlaying = false
+            const reader = new FileReader()
+            function wait(ms){
+                var start = new Date().getTime();
+                var end = start;
+                while(end < start + ms) {
+                    end = new Date().getTime();
+                }
+            }
+            async function getMidi(data) {
+                return await Midi.fromUrl(data)
+            }
+            function convertNotes(note) {
+                return note
+                    .replace("A", "La ")
+                    .replace("B", "Si ")
+                    .replace("C", "Do ")
+                    .replace("D", "Re ")
+                    .replace("E", "Mi ")
+                    .replace("F", "Fa ")
+                    .replace("G", "Sol ")
+            }
+            function uploadImage(e) {
+                const synth = new Tone.Synth().toDestination()
+                reader.onload = () => {
+                    const data = reader.result
+                    getMidi(data)
+                        .then(midi => {
+                            console.log(midi.tracks)
+                            midi.tracks[0].notes.forEach(note => {
+                                console.log(convertNotes(note.name) + " " + note.duration)
+                                synth.triggerAttackRelease(note.name, note.duration * 1000)
+                                wait(note.duration * 1000)
+                            })
+                        })
+                }
+                reader.readAsDataURL(e.target.files[0])
+            }
+            const uploader = document.getElementById("upload")
+            uploader.addEventListener("change", (e) => {
+                uploadImage(e)
+            })
+        </script>
+    </body>
+</html>
